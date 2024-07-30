@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+</head>
+<body>
+  <h1>Chat App</h1>
+  <div>
+    <input id="roomInput" type="text" placeholder="Enter room name">
+    <button id="joinButton">Join Room</button>
+  </div>
+  <div>
+    <input id="userIdInput" type="text" placeholder="Enter user ID">
+  </div>
+  <div>
+    <input id="messageInput" type="text" placeholder="Enter a message">
+    <button id="sendButton">Send</button>
+  </div>
+  <ul id="messages"></ul>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const roomInput = document.getElementById('roomInput');
+    const userIdInput = document.getElementById('userIdInput');
+    const joinButton = document.getElementById('joinButton');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const messagesList = document.getElementById('messages');
+
+    let currentRoom = '';
+    let currentUserId = '';
+
+    joinButton.addEventListener('click', () => {
+      const room = roomInput.value;
+      const userId = userIdInput.value;
+      if (room && userId) {
+        currentRoom = room;
+        currentUserId = userId;
+        socket.emit('join room', room);
+        socket.emit('reconnect room', { userId, room });
+        roomInput.value = '';
+      }
+    });
+
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value;
+      if (message && currentRoom && currentUserId) {
+        socket.emit('chat message', JSON.stringify({ userId: currentUserId, room: currentRoom, message }));
+        messageInput.value = '';
+      }
+    });
+
+    socket.on('chat message', (message) => {
+      const msg = JSON.parse(message);
+      const messageItem = document.createElement('li');
+      messageItem.textContent = `ID: ${msg.id}, Message: ${msg.message}`;
+      messagesList.appendChild(messageItem);
+    });
+
+    socket.on('missed message', (message) => {
+      const msg = message;
+      const messageItem = document.createElement('li');
+      messageItem.textContent = `Missed - ID: ${msg.id}, Message: ${msg.message}`;
+      messagesList.appendChild(messageItem);
+    });
+  </script>
+</body>
+</html>

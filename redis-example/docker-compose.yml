@@ -1,0 +1,50 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - mysql_network
+      - common_network
+
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    networks:
+      - redis_network
+      - common_network
+
+volumes:
+  mysql_data:
+
+networks:
+  mysql_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.101.0/24
+          gateway: 192.168.101.1
+
+  redis_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.102.0/24
+          gateway: 192.168.102.1
+
+  common_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.103.0/24
+          gateway: 192.168.103.1
