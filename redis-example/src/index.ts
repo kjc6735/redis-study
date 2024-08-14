@@ -37,19 +37,19 @@ const startServer = async () => {
         const parse = JSON.parse(msg);
         const messageId = await redis.xadd(streamKey,"*", 'message', parse.input, 'name', parse.name);
         console.log(`Produced message with ID: ${messageId}`);
-        // io.emit('chat message', JSON.stringify({ id: messageId, ...parse}));
-      });
+        // io.emit('chat message', JSON.stringify({ message: parse.input,name:parse.name}));
+    });
 
       const consumeMessages = async () => {
         while (true) {
-          const messages: any = await redis.xreadgroup('GROUP', consumerGroup, consumerName, 'COUNT', 10, 'BLOCK', 100, 'STREAMS', streamKey, '>');
-
+          const messages: any = await redis.xreadgroup('GROUP', consumerGroup, consumerName, 'COUNT', 10, 'BLOCK', 1, 'STREAMS', streamKey, '>');
           if (messages && messages.length > 0) {
             for (const [stream, entries] of messages) {
               for (const [id, fields] of entries) {
-                await redis.xack(streamKey, consumerGroup, id); // 메시지 처리 후 ACK
-                console.log(fields);
-                io.emit('chat message', JSON.stringify({ message: fields[1],name:fields[3]}));
+                redis.xack(streamKey, consumerGroup, id).then(() => {
+                  io.emit('chat message', JSON.stringify({ message: fields[1],name:fields[3]}));
+                }); // 메시지 처리 후 ACK
+                // console.log(fields);
       }
             }
           }

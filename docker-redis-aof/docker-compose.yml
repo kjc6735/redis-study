@@ -1,0 +1,10 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    volumes:
+      - ./:/usr/local/etc/redis/
+      - .:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
